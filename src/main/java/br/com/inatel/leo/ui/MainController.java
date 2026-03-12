@@ -1,6 +1,7 @@
 package br.com.inatel.leo.ui;
 
 import br.com.inatel.leo.service.GpsReportService;
+import br.com.inatel.leo.service.ImageProcessingService;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -17,29 +18,41 @@ import java.awt.image.BufferedImage;
 public class MainController {
 
     private final GpsReportService reportService;
-
+    private final ImageProcessingService imageProcessingService;
     @FXML private TextField txtLat;
     @FXML private TextField txtLon;
     @FXML private ImageView imgPreview;
+    @FXML private TextField txtLocalName; // Novo campo
 
     @FXML
     public void handleGerarRelatorio() {
         try {
-            // Agora aceita tanto -22.257 quanto 22 15 26 S
             double lat = CoordinateParser.parse(txtLat.getText());
             double lon = CoordinateParser.parse(txtLon.getText());
+            String localName = txtLocalName.getText();
 
-            BufferedImage bufferedImage = reportService.generateFullReport(lat, lon);
-            Image fxImage = SwingFXUtils.toFXImage(bufferedImage, null);
+            // 1. Gera o relatório base
+            BufferedImage bi = reportService.generateFullReport(lat, lon);
 
-            imgPreview.setFitWidth(imgPreview.getParent().getBoundsInLocal().getWidth()); // Ou um valor fixo tipo 600
-            imgPreview.setSmooth(true);
-            imgPreview.setCache(true);
-            imgPreview.setPreserveRatio(true);
+            // 2. Adiciona o nome personalizado no ponto se houver texto
+            if (localName != null && !localName.isBlank()) {
+                bi = imageProcessingService.addMarkerLabel(bi, localName);
+            }
+
+            // 3. Exibe e ajusta o tamanho
+            Image fxImage = SwingFXUtils.toFXImage(bi, null);
             imgPreview.setImage(fxImage);
 
+            // Força o redimensionamento dinâmico
+            imgPreview.setPreserveRatio(true);
+            imgPreview.setSmooth(true);
+
+            // Se o ImageView estiver dentro de um ScrollPane ou AnchorPane,
+            // podemos forçar ele a ocupar 80% da largura da janela, por exemplo:
+            imgPreview.fitWidthProperty().bind(imgPreview.getScene().widthProperty().multiply(0.7));
+
         } catch (Exception e) {
-            exibirErro("Erro", "Formato inválido: " + e.getMessage());
+            exibirErro("Falha no Processamento", e.getMessage());
         }
     }
 

@@ -5,62 +5,87 @@ import org.springframework.stereotype.Service;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class ImageProcessingService {
 
-    // Constantes para manter o padrão visual (Clean Code)
-    private static final int FOOTER_HEIGHT = 140;
-    private static final Color BACKGROUND_COLOR = new Color(15, 15, 15); // Preto "Premium"
-    private static final Color TEXT_COLOR = Color.WHITE;
+    // MÉTODO QUE ESTAVA FALTANDO (O RODAPÉ)
+    public BufferedImage overlayGpsInfo(BufferedImage originalImage, GpsData data) {
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
 
-    public BufferedImage overlayGpsInfo(BufferedImage satelliteImage, GpsData data) {
-        int width = satelliteImage.getWidth();
-        int height = satelliteImage.getHeight();
+        // Se scale=2, a largura é 1280. Multiplier ajuda a dobrar fontes e margens.
+        int multiplier = (width > 640) ? 2 : 1;
+        int footerHeight = 120 * multiplier;
 
-        // 1. Criamos uma nova imagem com espaço extra para o rodapé
-        BufferedImage finalImage = new BufferedImage(width, height + FOOTER_HEIGHT, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2d = finalImage.createGraphics();
+        BufferedImage combined = new BufferedImage(width, height + footerHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = combined.createGraphics();
 
-        // 2. Configurações de Qualidade (O segredo do portfólio)
+        // 1. Desenha o mapa
+        g2d.drawImage(originalImage, 0, 0, null);
+
+        // 2. Rodapé Preto
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(0, height, width, footerHeight);
+
+        // 3. Configurações de renderização
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setColor(Color.WHITE);
 
-        // 3. Desenhar a imagem do satélite no topo
-        g2d.drawImage(satelliteImage, 0, 0, null);
+        // --- SEÇÃO: ENDEREÇO ---
+        int margin = 20 * multiplier;
+        g2d.setFont(new Font("Arial", Font.BOLD, 14 * multiplier));
+        g2d.drawString("Endereço", margin, height + (35 * multiplier));
 
-        // 4. Desenhar o painel inferior (o rodapé preto)
-        g2d.setColor(BACKGROUND_COLOR);
-        g2d.fillRect(0, height, width, FOOTER_HEIGHT);
+        g2d.setFont(new Font("Arial", Font.PLAIN, 11 * multiplier));
+        String end = (data.getEndereco() != null) ? data.getEndereco() : "Buscando...";
+        g2d.drawString(end, margin, height + (55 * multiplier));
 
-        // 5. Escrever os textos (Simulando o seu print)
-        g2d.setColor(TEXT_COLOR);
+        // --- SEÇÃO: COORDENADAS (Lado Esquerdo) ---
+        g2d.setFont(new Font("Arial", Font.BOLD, 12 * multiplier));
+        g2d.drawString("Latitude:", margin, height + (85 * multiplier));
+        g2d.drawString("Longitude:", margin, height + (105 * multiplier));
 
-        // Endereço (Destaque)
-        g2d.setFont(new Font("SansSerif", Font.BOLD, 16));
-        g2d.drawString("Endereço", 25, height + 35);
-        g2d.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        g2d.drawString(data.getEndereco(), 25, height + 55);
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12 * multiplier));
+        g2d.drawString(String.valueOf(data.getLatitude()), margin + (80 * multiplier), height + (85 * multiplier));
+        g2d.drawString(String.valueOf(data.getLongitude()), margin + (80 * multiplier), height + (105 * multiplier));
 
-        // Coluna 1: Coordenadas
-        g2d.setFont(new Font("Monospaced", Font.BOLD, 14)); // Fonte mono parece mais "técnica"
-        g2d.drawString("Latitude", 25, height + 90);
-        g2d.drawString("Longitude", 25, height + 110);
+        // --- SEÇÃO: ALTITUDE (Lado Direito) ---
+        g2d.setFont(new Font("Arial", Font.BOLD, 12 * multiplier));
+        int colDireitaX = width / 2 + (50 * multiplier); // Posiciona no meio da imagem para a direita
+        g2d.drawString("Altitude:", colDireitaX, height + (105 * multiplier));
 
-        g2d.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        g2d.drawString(String.valueOf(data.getLatitude()), 120, height + 90);
-        g2d.drawString(String.valueOf(data.getLongitude()), 120, height + 110);
-
-        // Coluna 2: Data e Altitude
-        g2d.setFont(new Font("SansSerif", Font.BOLD, 14));
-        g2d.drawString("Data", width / 2 + 50, height + 90);
-        g2d.drawString("Altitude", width / 2 + 50, height + 110);
-
-        g2d.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        g2d.drawString(data.getFormattedDate(), width / 2 + 130, height + 90);
-        g2d.drawString(data.getAltitude() + " m a.s.l", width / 2 + 130, height + 110);
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12 * multiplier));
+        // Aqui garantimos que a altitude apareça
+        String altitudeText = String.format("%.2f m a.s.l", data.getAltitude());
+        g2d.drawString(altitudeText, colDireitaX + (70 * multiplier), height + (105 * multiplier));
 
         g2d.dispose();
-        return finalImage;
+        return combined;
+    }
+
+
+    // MÉTODO DO PONTO COM NOME (QUE ADICIONAMOS ANTES)
+    public BufferedImage addMarkerLabel(BufferedImage image, String label) {
+        Graphics2D g2d = image.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 14));
+        FontMetrics metrics = g2d.getFontMetrics();
+
+        int x = (image.getWidth() / 2) - (metrics.stringWidth(label) / 2);
+        int y = (image.getHeight() / 2) - 25; // Sobe 25 pixels para não cobrir o marcador
+
+        // Sombra leve
+        g2d.setColor(new Color(0, 0, 0, 150));
+        g2d.drawString(label, x + 1, y + 1);
+
+        // Texto Principal
+        g2d.setColor(Color.YELLOW);
+        g2d.drawString(label, x, y);
+
+        g2d.dispose();
+        return image;
     }
 }

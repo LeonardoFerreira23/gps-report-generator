@@ -68,18 +68,20 @@ public class GoogleMapsClient {
      * Busca a altitude em metros a partir de coordenadas (Elevation).
      */
     public double getElevationFromCoords(double lat, double lon) {
-        String url = UriComponentsBuilder.fromUriString("https://maps.googleapis.com/maps/api/elevation/json")
-                .queryParam("locations", lat + "," + lon)
-                .queryParam("key", apiKey)
-                .build()
-                .toUriString();
-
         try {
-            String response = restTemplate.getForObject(url, String.class);
-            JsonNode root = mapper.readTree(response);
-            return root.path("results").get(0).path("elevation").asDouble(0.0);
+            String url = UriComponentsBuilder.fromUriString("https://maps.googleapis.com/maps/api/elevation/json")
+                    .queryParam("locations", lat + "," + lon)
+                    .queryParam("key", apiKey)
+                    .build().toUriString();
+
+            // Faz a chamada e pega o nó 'results'
+            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
+            if (response != null && response.has("results") && response.get("results").size() > 0) {
+                return response.get("results").get(0).get("elevation").asDouble();
+            }
         } catch (Exception e) {
-            return 0.0;
+            System.err.println("Erro ao buscar altitude: " + e.getMessage());
         }
+        return 0.0;
     }
 }
