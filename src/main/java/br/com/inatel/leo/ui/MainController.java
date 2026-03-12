@@ -11,12 +11,14 @@ import javafx.scene.image.ImageView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+
 import java.awt.image.BufferedImage;
 
 @Component
 @RequiredArgsConstructor
 public class MainController {
 
+    private BufferedImage currentFullImage;
     private final GpsReportService reportService;
     private final ImageProcessingService imageProcessingService;
     @FXML private TextField txtLat;
@@ -31,28 +33,27 @@ public class MainController {
             double lon = CoordinateParser.parse(txtLon.getText());
             String localName = txtLocalName.getText();
 
-            // 1. Gera o relatório base
+            // 1. Gera a imagem base com o rodapé
             BufferedImage bi = reportService.generateFullReport(lat, lon);
 
-            // 2. Adiciona o nome personalizado no ponto se houver texto
+            // 2. ADICIONE ESSA LINHA: (Vincula a imagem ao botão salvar)
+            this.currentFullImage = bi;
+
+            // 3. Adiciona o texto no mapa
             if (localName != null && !localName.isBlank()) {
                 bi = imageProcessingService.addMarkerLabel(bi, localName);
             }
 
-            // 3. Exibe e ajusta o tamanho
+            // 4. Mostra na tela
             Image fxImage = SwingFXUtils.toFXImage(bi, null);
             imgPreview.setImage(fxImage);
 
-            // Força o redimensionamento dinâmico
+            // Ajuste de tamanho dinâmico
             imgPreview.setPreserveRatio(true);
-            imgPreview.setSmooth(true);
-
-            // Se o ImageView estiver dentro de um ScrollPane ou AnchorPane,
-            // podemos forçar ele a ocupar 80% da largura da janela, por exemplo:
-            imgPreview.fitWidthProperty().bind(imgPreview.getScene().widthProperty().multiply(0.7));
+            imgPreview.fitWidthProperty().bind(imgPreview.getScene().widthProperty().subtract(350));
 
         } catch (Exception e) {
-            exibirErro("Falha no Processamento", e.getMessage());
+            exibirErro("Erro", e.getMessage());
         }
     }
 
@@ -62,5 +63,28 @@ public class MainController {
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
         alert.showAndWait();
+    }
+
+    @FXML
+    public void handleSalvarImagem() {
+        if (currentFullImage == null) {
+            exibirErro("Aviso", "Gere um relatório antes de salvar!");
+            return;
+        }
+
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Salvar Relatório");
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("Imagem PNG", "*.png"));
+        fileChooser.setInitialFileName("Relatorio_GPS.png");
+
+        java.io.File file = fileChooser.showSaveDialog(txtLat.getScene().getWindow());
+
+        if (file != null) {
+            try {
+                javax.imageio.ImageIO.write(currentFullImage, "png", file);
+            } catch (Exception e) {
+                exibirErro("Erro", "Falha ao gravar arquivo: " + e.getMessage());
+            }
+        }
     }
 }

@@ -24,9 +24,8 @@ public class GpsReportService {
         GpsData data = GpsData.builder()
                 .latitude(lat)
                 .longitude(lon)
-                .altitude(Math.round(altitudeReal)) // Arredondando para ficar bonito
+                .altitude(Math.round(altitudeReal)) // Verifique se altitudeReal não é 0 aqui
                 .endereco(enderecoReal)
-                .dataHora(LocalDateTime.now())
                 .build();
 
         // 3. Devolve a imagem "soldada" com o rodapé

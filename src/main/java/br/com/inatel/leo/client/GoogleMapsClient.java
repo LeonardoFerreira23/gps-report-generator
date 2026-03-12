@@ -68,19 +68,20 @@ public class GoogleMapsClient {
      * Busca a altitude em metros a partir de coordenadas (Elevation).
      */
     public double getElevationFromCoords(double lat, double lon) {
-        try {
-            String url = UriComponentsBuilder.fromUriString("https://maps.googleapis.com/maps/api/elevation/json")
-                    .queryParam("locations", lat + "," + lon)
-                    .queryParam("key", apiKey)
-                    .build().toUriString();
+        String url = UriComponentsBuilder.fromUriString("https://maps.googleapis.com/maps/api/elevation/json")
+                .queryParam("locations", lat + "," + lon)
+                .queryParam("key", apiKey)
+                .build().toUriString();
 
-            // Faz a chamada e pega o nó 'results'
-            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
-            if (response != null && response.has("results") && response.get("results").size() > 0) {
-                return response.get("results").get(0).get("elevation").asDouble();
+        try {
+            JsonNode root = mapper.readTree(restTemplate.getForObject(url, String.class));
+            // O segredo está aqui: results[0].elevation
+            JsonNode results = root.path("results");
+            if (results.isArray() && !results.isEmpty()) {
+                return results.get(0).path("elevation").asDouble(0.0);
             }
         } catch (Exception e) {
-            System.err.println("Erro ao buscar altitude: " + e.getMessage());
+            System.err.println("Erro na Altitude: " + e.getMessage());
         }
         return 0.0;
     }
