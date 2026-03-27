@@ -15,51 +15,49 @@ public class ImageProcessingService {
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
 
-        // Se scale=2, a largura é 1280. Multiplier ajuda a dobrar fontes e margens.
         int multiplier = (width > 640) ? 2 : 1;
-        int footerHeight = 120 * multiplier;
+        // Fixamos o rodapé em 100 pixels (tamanho ideal para 4 linhas de texto)
+        int footerHeight = 100 * multiplier;
 
         BufferedImage combined = new BufferedImage(width, height + footerHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = combined.createGraphics();
 
-        // 1. Desenha o mapa
         g2d.drawImage(originalImage, 0, 0, null);
-
-        // 2. Rodapé Preto
         g2d.setColor(Color.BLACK);
         g2d.fillRect(0, height, width, footerHeight);
 
-        // 3. Configurações de renderização
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2d.setColor(Color.WHITE);
 
-        // --- SEÇÃO: ENDEREÇO ---
         int margin = 20 * multiplier;
-        g2d.setFont(new Font("Arial", Font.BOLD, 14 * multiplier));
-        g2d.drawString("Endereço", margin, height + (35 * multiplier));
 
+        // LINHA 1: Título Endereço (Y = 25)
+        g2d.setFont(new Font("Arial", Font.BOLD, 14 * multiplier));
+        g2d.drawString("Endereço", margin, height + (25 * multiplier));
+
+        // LINHA 2: Texto do Endereço (Y = 45)
         g2d.setFont(new Font("Arial", Font.PLAIN, 11 * multiplier));
         String end = (data.getEndereco() != null) ? data.getEndereco() : "Buscando...";
-        g2d.drawString(end, margin, height + (55 * multiplier));
+        g2d.drawString(end, margin, height + (45 * multiplier));
 
-        // --- SEÇÃO: COORDENADAS (Lado Esquerdo) ---
+        // LINHA 3: Latitude (Esquerda) e Altitude (Direita) (Y = 70)
         g2d.setFont(new Font("Arial", Font.BOLD, 12 * multiplier));
-        g2d.drawString("Latitude:", margin, height + (85 * multiplier));
-        g2d.drawString("Longitude:", margin, height + (105 * multiplier));
+        g2d.drawString("Latitude:", margin, height + (70 * multiplier));
+
+        int colDireitaX = width / 2 + (50 * multiplier);
+        g2d.drawString("Altitude:", colDireitaX, height + (70 * multiplier));
 
         g2d.setFont(new Font("Arial", Font.PLAIN, 12 * multiplier));
-        g2d.drawString(String.valueOf(data.getLatitude()), margin + (80 * multiplier), height + (85 * multiplier));
-        g2d.drawString(String.valueOf(data.getLongitude()), margin + (80 * multiplier), height + (105 * multiplier));
-
-        // --- SEÇÃO: ALTITUDE (Lado Direito) ---
-        g2d.setFont(new Font("Arial", Font.BOLD, 12 * multiplier));
-        int colDireitaX = width / 2 + (50 * multiplier); // Posiciona no meio da imagem para a direita
-        g2d.drawString("Altitude:", colDireitaX, height + (105 * multiplier));
-
-        g2d.setFont(new Font("Arial", Font.PLAIN, 12 * multiplier));
-        // Aqui garantimos que a altitude apareça
+        g2d.drawString(String.valueOf(data.getLatitude()), margin + (80 * multiplier), height + (70 * multiplier));
         String altitudeText = String.format("%.2f m a.s.l", data.getAltitude());
-        g2d.drawString(altitudeText, colDireitaX + (70 * multiplier), height + (105 * multiplier));
+        g2d.drawString(altitudeText, colDireitaX + (70 * multiplier), height + (70 * multiplier));
+
+        // LINHA 4: Longitude (Y = 90)
+        g2d.setFont(new Font("Arial", Font.BOLD, 12 * multiplier));
+        g2d.drawString("Longitude:", margin, height + (90 * multiplier));
+
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12 * multiplier));
+        g2d.drawString(String.valueOf(data.getLongitude()), margin + (80 * multiplier), height + (90 * multiplier));
 
         g2d.dispose();
         return combined;

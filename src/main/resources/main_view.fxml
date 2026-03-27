@@ -6,14 +6,15 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="648.0" prefWidth="902.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.com.inatel.leo.ui.MainController">
+<AnchorPane prefHeight="482.0" prefWidth="754.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.com.inatel.leo.ui.MainController">
    <children>
-      <Label layoutX="48.0" layoutY="72.0" prefHeight="18.0" prefWidth="126.0" text="Latitude e Longitude" textAlignment="CENTER" />
-      <Button layoutX="60.0" layoutY="252.0" mnemonicParsing="false" onAction="#handleGerarRelatorio" text="Gerar Relatório" />
-      <ImageView fx:id="imgPreview" fitHeight="638.0" fitWidth="670.0" layoutX="210.0" layoutY="7.0" pickOnBounds="true" />
-      <TextField fx:id="txtLat" layoutX="35.0" layoutY="113.0" />
-      <TextField fx:id="txtLon" layoutX="37.0" layoutY="157.0" />
-      <TextField fx:id="txtLocalName" layoutX="35.0" layoutY="202.0" />
-      <Button layoutX="60.0" layoutY="309.0" mnemonicParsing="false" onAction="#handleSalvarImagem" prefHeight="30.0" prefWidth="103.0" text="Button" />
+      <Label alignment="CENTER" layoutX="41.0" layoutY="48.0" prefHeight="18.0" prefWidth="126.0" text="Latitude e Longitude" textAlignment="CENTER" />
+      <Button layoutX="42.0" layoutY="241.0" mnemonicParsing="false" onAction="#handleGerarRelatorio" prefHeight="30.0" prefWidth="103.0" text="Buscar local" />
+      <ImageView fx:id="imgPreview" fitHeight="440.0" fitWidth="531.0" layoutX="207.0" layoutY="25.0" pickOnBounds="true" />
+      <TextField fx:id="txtLat" layoutX="28.0" layoutY="76.0" promptText="Ex: 19 00 03.54 S " />
+      <TextField fx:id="txtLon" layoutX="28.0" layoutY="120.0" promptText="Ex: 049 01 09.32 W" />
+      <TextField fx:id="txtLocalName" layoutX="28.0" layoutY="191.0" prefHeight="26.0" prefWidth="152.0" />
+      <Button layoutX="42.0" layoutY="289.0" mnemonicParsing="false" onAction="#handleSalvarImagem" prefHeight="30.0" prefWidth="103.0" text="Salvar imagem" />
+      <Label alignment="CENTER" layoutX="30.0" layoutY="166.0" prefHeight="18.0" prefWidth="126.0" text="Nome do local" textAlignment="CENTER" />
    </children>
 </AnchorPane>

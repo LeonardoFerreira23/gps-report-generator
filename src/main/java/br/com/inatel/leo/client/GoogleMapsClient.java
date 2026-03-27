@@ -29,12 +29,12 @@ public class GoogleMapsClient {
         String url = UriComponentsBuilder.fromUriString(staticMapBaseUrl)
                 .queryParam("center", lat + "," + lon)
                 .queryParam("zoom", zoom)
-                .queryParam("size", "640x640")
+                .queryParam("size", "640x380") // <--- Formato retangular (paisagem)
+                // .queryParam("scale", "2") // Deixe comentado ou apague para não ficar gigante
                 .queryParam("maptype", "satellite")
                 .queryParam("markers", "color:green|" + lat + "," + lon)
                 .queryParam("key", apiKey)
-                .build()
-                .toUriString();
+                .build().toUriString();
 
         byte[] imageBytes = restTemplate.getForObject(url, byte[].class);
 
